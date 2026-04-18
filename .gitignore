@@ -1,0 +1,20 @@
+node_modules/
+dist/
+dist-electron/
+Processed Files/
+episodes/
+uploads/
+logs/
+*.log
+
+# Podcast media and generated outputs. Keep the reusable shared intro tracked.
+*.wav
+*.WAV
+*.mp3
+*.mp4
+*.m4a
+*.mov
+*.aac
+*.flac
+!intro.wav
+!Example Episode Processing Folder/intro.wav

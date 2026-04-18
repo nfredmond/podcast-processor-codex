@@ -1,0 +1,31 @@
+{
+  "name": "welcome-to-grass-valley-processor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Linux desktop processor for Welcome to Grass Valley podcast episodes.",
+  "main": "dist-electron/main/main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k \"vite --host 127.0.0.1\" \"wait-on tcp:5173 && npm run build:electron && ELECTRON_START_URL=http://127.0.0.1:5173 electron .\"",
+    "build": "npm run typecheck && npm run build:electron && vite build",
+    "build:electron": "tsc -p tsconfig.electron.json",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.electron.json --noEmit",
+    "smoke": "node scripts/smoke.mjs",
+    "start": "npm run build && electron ."
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^5.1.1",
+    "vite": "^8.0.8",
+    "typescript": "^5.9.3",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "electron": "^41.2.1",
+    "concurrently": "^9.2.1",
+    "wait-on": "^9.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.2",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3"
+  }
+}
