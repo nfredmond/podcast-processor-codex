@@ -364,7 +364,7 @@ export class PodcastProcessor {
             String(preset.fps)
           ];
 
-    const progressState = new Map<string, string>();
+    let lastProgressPercent = -1;
     const args = [
       "-y",
       "-loop",
@@ -402,13 +402,22 @@ export class PodcastProcessor {
         if (!key) {
           return;
         }
-        progressState.set(key, value);
         if (key === "out_time_ms" || key === "out_time_us") {
-          const currentSeconds = Number(value) / 1_000_000;
+          const currentMicros = Number(value);
+          if (!Number.isFinite(currentMicros) || currentMicros < 0) {
+            return;
+          }
+          const currentSeconds = currentMicros / 1_000_000;
           const percent =
             duration > 0
-              ? Math.min(99, Math.round((currentSeconds / duration) * 100))
+              ? Math.min(99, Math.max(0, Math.round((currentSeconds / duration) * 100)))
               : undefined;
+          if (percent !== undefined) {
+            if (percent === lastProgressPercent) {
+              return;
+            }
+            lastProgressPercent = percent;
+          }
           this.emit({
             type: "progress",
             step: "mp4",
@@ -529,7 +538,9 @@ export class PodcastProcessor {
       onStderrLine: (line) =>
         this.emit({ type: "progress", step: "whisper", message: line })
     });
-    assertSuccess(result, "Whisper transcription");
+    if (result.code !== 0) {
+      throw new Error(describeWhisperFailure(result.stdout, result.stderr));
+    }
 
     const generatedPath = path.join(
       tempDir,
@@ -1027,6 +1038,29 @@ function parseModelJson(raw: string): AiModelResult {
 
 function normalizeTranscript(value: string): string {
   return `${value.replace(/\r\n/g, "\n").replace(/[ \t]+\n/g, "\n").trim()}\n`;
+}
+
+function describeWhisperFailure(stdout: string, stderr: string): string {
+  const combined = `${stderr}\n${stdout}`.trim();
+  if (/CUDA out of memory/i.test(combined)) {
+    return [
+      "Whisper ran out of GPU memory while loading the selected model.",
+      "Close GPU-heavy apps such as ComfyUI, Ollama, or other Whisper jobs, or choose a smaller Whisper model, then retry."
+    ].join(" ");
+  }
+
+  const detail = tailErrorDetail(combined);
+  return `Whisper transcription failed${detail ? `: ${detail}` : ""}`;
+}
+
+function tailErrorDetail(text: string): string {
+  return text
+    .split(/\r?\n|\r/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(-12)
+    .join("\n")
+    .slice(-2000);
 }
 
 function sanitizeOneParagraph(value: string): string {

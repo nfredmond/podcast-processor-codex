@@ -95,7 +95,7 @@ export function streamCommand(
       onLine?: (line: string) => void
     ) => {
       const combined = currentBuffer + chunk;
-      const lines = combined.split(/\r?\n/);
+      const lines = combined.split(/\r?\n|\r/);
       const nextBuffer = lines.pop() ?? "";
       for (const line of lines) {
         if (line.trim()) {

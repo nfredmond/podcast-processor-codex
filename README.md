@@ -50,6 +50,10 @@ Build and launch the production app:
 npm start
 ```
 
+The local desktop shortcut uses `launch-podcast-processor.sh`, which loads the
+same Node/npm environment a terminal would use, builds the app, and opens
+Electron. Launcher logs are written to `~/.cache/podcast-processor-codex/launcher.log`.
+
 ## Workflow
 
 1. Drop or choose a raw episode WAV.
